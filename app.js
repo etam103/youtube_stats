@@ -47,8 +47,8 @@ app.use('/', index);
 app.use('/auth', auth);
 app.use('/liveStream', liveStream);
 
-const db = monk(MONGODB_URI);
-const userChatCollection = db.get('userChatMessages');
+// const db = monk(MONGODB_URI);
+// const userChatCollection = db.get('userChatMessages');
 
 server.listen(PORT, (error) => {
   if (error) {
