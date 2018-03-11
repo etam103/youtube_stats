@@ -47,8 +47,8 @@ app.use('/', index);
 app.use('/auth', auth);
 app.use('/liveStream', liveStream);
 
-// const db = monk(MONGODB_URI);
-// const userChatCollection = db.get('userChatMessages');
+const db = monk(MONGODB_URI);
+const userChatCollection = db.get('userChatMessages');
 
 server.listen(PORT, (error) => {
   if (error) {
@@ -59,69 +59,69 @@ server.listen(PORT, (error) => {
 });
 
 // TODO: - move this to another file
-// io.on('connection', (socket) => {
-//   console.log('Client connected...');
+io.on('connection', (socket) => {
+  console.log('Client connected...');
 
-//   // NOTE: - pass in one object instead of two
-//   async function createOrUpdateUserChatMessages(username, message) {
-//     try {
-//       const trimmedUsername = username.replace(/\s+/, '');
-//       const result = await userChatCollection.findOne({ username: trimmedUsername });
+  // NOTE: - pass in one object instead of two
+  async function createOrUpdateUserChatMessages(username, message) {
+    try {
+      const trimmedUsername = username.replace(/\s+/, '');
+      const result = await userChatCollection.findOne({ username: trimmedUsername });
 
-//       if (result === null) {
-//         await userChatCollection.insert({ username: trimmedUsername, messages: [message] });
-//       } else {
-//         const { _id } = result;
-//         result.messages.push(message);
-//         const { messages } = result;
-//         const updateQuery = { $set: { messages } };
-//         await userChatCollection.update({ _id }, updateQuery);
-//       }
+      if (result === null) {
+        await userChatCollection.insert({ username: trimmedUsername, messages: [message] });
+      } else {
+        const { _id } = result;
+        result.messages.push(message);
+        const { messages } = result;
+        const updateQuery = { $set: { messages } };
+        await userChatCollection.update({ _id }, updateQuery);
+      }
 
-//       return;
-//     } catch (err) {
-//       console.log(err);
-//     }
-//   }
+      return;
+    } catch (err) {
+      console.log(err);
+    }
+  }
 
-//   async function startPolling(liveChatId, nextPageToken, pollingIntervalMillis) {
-//     await setTimeout(async () => {
-//       try {
-//         const liveChatMessageData = await youtube.listLiveChatMessagesById(liveChatId, nextPageToken);
-//         const newNextPageToken = liveChatMessageData.nextPageToken;
-//         const newPollingInterval = liveChatMessageData.pollingIntervalMillis;
-//         const { items } = liveChatMessageData; // chatMessages
+  async function startPolling(liveChatId, nextPageToken, pollingIntervalMillis) {
+    await setTimeout(async () => {
+      try {
+        const liveChatMessageData = await youtube.listLiveChatMessagesById(liveChatId, nextPageToken);
+        const newNextPageToken = liveChatMessageData.nextPageToken;
+        const newPollingInterval = liveChatMessageData.pollingIntervalMillis;
+        const { items } = liveChatMessageData; // chatMessages
 
-//         items.forEach(async (item) => {
-//           const usernameWithMessage = {
-//             username: item.authorDetails.displayName,
-//             message: item.snippet.displayMessage,
-//           };
-//           await createOrUpdateUserChatMessages(usernameWithMessage.username, usernameWithMessage.message);
-//           socket.emit('new message', usernameWithMessage);
-//         });
+        items.forEach(async (item) => {
+          const usernameWithMessage = {
+            username: item.authorDetails.displayName,
+            message: item.snippet.displayMessage,
+          };
+          await createOrUpdateUserChatMessages(usernameWithMessage.username, usernameWithMessage.message);
+          socket.emit('new message', usernameWithMessage);
+        });
 
-//         startPolling(liveChatId, newNextPageToken, newPollingInterval);
-//       } catch (err) {
-//         console.log(err);
-//       }
-//     }, pollingIntervalMillis);
-//   }
+        startPolling(liveChatId, newNextPageToken, newPollingInterval);
+      } catch (err) {
+        console.log(err);
+      }
+    }, pollingIntervalMillis);
+  }
 
-//   socket.on('startPolling', async (data) => {
-//     const { videoId } = data;
+  socket.on('startPolling', async (data) => {
+    const { videoId } = data;
 
-//     // time to get live chat messages
-//     const videoData = await youtube.listVideosById(videoId);
-//     const { activeLiveChatId } = videoData.items[0].liveStreamingDetails;
-//     startPolling(activeLiveChatId, '', 0);
-//   });
+    // time to get live chat messages
+    const videoData = await youtube.listVideosById(videoId);
+    const { activeLiveChatId } = videoData.items[0].liveStreamingDetails;
+    startPolling(activeLiveChatId, '', 0);
+  });
 
-//   socket.on('search', async (data) => {
-//     const { username } = data;
-//     const trimmedUsername = username.replace(/\s+/, '');
-//     const result = await userChatCollection.findOne({ username: trimmedUsername });
+  socket.on('search', async (data) => {
+    const { username } = data;
+    const trimmedUsername = username.replace(/\s+/, '');
+    const result = await userChatCollection.findOne({ username: trimmedUsername });
 
-//     socket.emit('searchResults', result);
-//   });
-// });
+    socket.emit('searchResults', result);
+  });
+});
