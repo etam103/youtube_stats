@@ -1,0 +1,37 @@
+{
+  "name": "streamlabsinterview",
+  "version": "0.0.0",
+  "private": true,
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "keywords": [
+    "heroku"
+  ],
+  "engines": {
+    "node": "9.3.0"
+  },
+  "dependencies": {
+    "body-parser": "~1.18.2",
+    "cookie-parser": "~1.4.3",
+    "debug": "~2.6.9",
+    "ejs": "^2.5.7",
+    "express": "~4.15.5",
+    "express-session": "^1.15.6",
+    "googleapis": "^27.0.0",
+    "mongodb": "^3.0.4",
+    "monk": "^6.0.5",
+    "morgan": "~1.9.0",
+    "npm": "^5.7.1",
+    "passport": "^0.4.0",
+    "passport-google-oauth": "^1.0.0",
+    "serve-favicon": "^2.4.5",
+    "socket.io": "^2.0.4"
+  },
+  "devDependencies": {
+    "eslint": "^4.18.2",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.9.0"
+  }
+}
