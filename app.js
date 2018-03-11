@@ -11,6 +11,7 @@ const monk = require('monk');
 const index = require('./routes/index');
 const auth = require('./routes/auth');
 const liveStream = require('./routes/liveStream');
+const cors = require('cors');
 const youtube = require('./youtube');
 
 // NOTE: - Server config options
@@ -25,6 +26,7 @@ const io = require('socket.io')(server);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
+app.use(cors());
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(bodyParser.json());
