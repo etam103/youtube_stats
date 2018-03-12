@@ -65,11 +65,10 @@ io.on('connection', (socket) => {
   // NOTE: - pass in one object instead of two
   async function createOrUpdateUserChatMessages(username, message) {
     try {
-      const trimmedUsername = username.replace(/\s+/, '');
-      const result = await userChatCollection.findOne({ username: trimmedUsername });
-
+      const result = await userChatCollection.findOne({ username });
+      
       if (result === null) {
-        await userChatCollection.insert({ username: trimmedUsername, messages: [message] });
+        await userChatCollection.insert({ username, messages: [message] });
       } else {
         const { _id } = result;
         result.messages.push(message);
@@ -84,28 +83,31 @@ io.on('connection', (socket) => {
     }
   }
 
+  function timeout(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
   async function startPolling(liveChatId, nextPageToken, pollingIntervalMillis) {
-    await setTimeout(async () => {
-      try {
-        const liveChatMessageData = await youtube.listLiveChatMessagesById(liveChatId, nextPageToken);
-        const newNextPageToken = liveChatMessageData.nextPageToken;
-        const newPollingInterval = liveChatMessageData.pollingIntervalMillis;
-        const { items } = liveChatMessageData; // chatMessages
+    await timeout(pollingIntervalMillis);
+    try {
+      const liveChatMessageData = await youtube.listLiveChatMessagesById(liveChatId, nextPageToken);
+      const newNextPageToken = liveChatMessageData.nextPageToken;
+      const newPollingInterval = liveChatMessageData.pollingIntervalMillis;
+      const { items } = liveChatMessageData; // chatMessages
 
-        items.forEach(async (item) => {
-          const usernameWithMessage = {
-            username: item.authorDetails.displayName,
-            message: item.snippet.displayMessage,
-          };
-          await createOrUpdateUserChatMessages(usernameWithMessage.username, usernameWithMessage.message);
-          socket.emit('new message', usernameWithMessage);
-        });
-
-        startPolling(liveChatId, newNextPageToken, newPollingInterval);
-      } catch (err) {
-        console.log(err);
+      for (let item of items) {
+        const usernameWithMessage = {
+          username: item.authorDetails.displayName,
+          message: item.snippet.displayMessage,
+        };
+        await createOrUpdateUserChatMessages(usernameWithMessage.username, usernameWithMessage.message);
+        socket.emit('new message', usernameWithMessage);
       }
-    }, pollingIntervalMillis);
+
+      startPolling(liveChatId, newNextPageToken, newPollingInterval);
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   socket.on('startPolling', async (data) => {
@@ -119,8 +121,7 @@ io.on('connection', (socket) => {
 
   socket.on('search', async (data) => {
     const { username } = data;
-    const trimmedUsername = username.replace(/\s+/, '');
-    const result = await userChatCollection.findOne({ username: trimmedUsername });
+    const result = await userChatCollection.findOne({ username });
 
     socket.emit('searchResults', result);
   });
